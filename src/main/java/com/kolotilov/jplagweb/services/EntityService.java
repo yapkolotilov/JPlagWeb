@@ -46,5 +46,5 @@ public interface EntityService<T, K> {
      * @return Deleted entity.
      * @throws EntityNotFoundException if entity doesn't exist.
      */
-    void delete(K id) throws EntityNotFoundException;
+    T delete(K id) throws EntityNotFoundException;
 }

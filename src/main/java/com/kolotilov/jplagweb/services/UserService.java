@@ -4,11 +4,10 @@ import com.kolotilov.jplagweb.exceptions.DuplicateEntityException;
 import com.kolotilov.jplagweb.exceptions.EntityNotFoundException;
 import com.kolotilov.jplagweb.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.IncorrectResultSetColumnCountException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Service;
 
-import javax.validation.ConstraintViolationException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -16,6 +15,7 @@ import java.util.List;
 /**
  * User service.
  */
+@Service
 public class UserService implements EntityService<User, String> {
 
     //region Queries
@@ -52,10 +52,10 @@ public class UserService implements EntityService<User, String> {
     @Override
     public User getById(String id) throws EntityNotFoundException {
         try {
-            return jdbc.queryForObject(SELECT_BY_ID,
+            return jdbc.query(SELECT_BY_ID,
                     new Object[]{id},
-                    new UserMapper());
-        } catch (IncorrectResultSetColumnCountException e) {
+                    new UserMapper()).get(0);
+        } catch (Exception e) {
             throw new EntityNotFoundException("User not found!");
         }
     }
@@ -74,7 +74,7 @@ public class UserService implements EntityService<User, String> {
                     user.getPassword(),
                     user.getName());
             return user;
-        } catch (ConstraintViolationException e) {
+        } catch (Exception e) {
             throw new DuplicateEntityException("User already exists!");
         }
     }
@@ -88,14 +88,18 @@ public class UserService implements EntityService<User, String> {
      */
     @Override
     public User edit(User user) throws EntityNotFoundException {
-        int rows = jdbc.update(UPDATE,
-                user.getPassword(),
-                user.getUsername(),
-                user.getUsername()
-        );
-        if (rows == 0)
+        try {
+            int rows = jdbc.update(UPDATE,
+                    user.getPassword(),
+                    user.getName(),
+                    user.getUsername()
+            );
+            if (rows == 0)
+                throw new EntityNotFoundException("User not found!");
+            return user;
+        } catch (Exception e) {
             throw new EntityNotFoundException("User not found!");
-        return user;
+        }
     }
 
     /**
@@ -106,12 +110,16 @@ public class UserService implements EntityService<User, String> {
      * @throws EntityNotFoundException if entity doesn't exist.
      */
     @Override
-    public void delete(String id) throws EntityNotFoundException {
-        int rows = jdbc.update(DELETE,
-                id
-        );
-        if (rows == 0)
+    public User delete(String id) throws EntityNotFoundException {
+        try {
+            User user = getById(id);
+            jdbc.update(DELETE,
+                    id
+            );
+            return user;
+        } catch (Exception e) {
             throw new EntityNotFoundException("User not found!");
+        }
     }
 
     private static class UserMapper implements RowMapper<User> {
