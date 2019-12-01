@@ -1,5 +1,7 @@
 package com.kolotilov.jplagweb.controllers;
 
+import com.kolotilov.jplagweb.exceptions.DuplicateEntityException;
+import com.kolotilov.jplagweb.exceptions.EntityNotFoundException;
 import com.kolotilov.jplagweb.models.ErrorViewModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,4 +23,23 @@ public abstract class AbstractController {
     protected ResponseEntity<ErrorViewModel> notFound(String message) {
         return new ResponseEntity<>(new ErrorViewModel(message), HttpStatus.NOT_FOUND);
     }
+
+    protected <T> ResponseEntity<?> proceed(RequestProcessor<T> code) {
+        try {
+            return ok(code.run());
+        } catch (EntityNotFoundException e) {
+            return notFound(e.getMessage());
+        } catch (DuplicateEntityException e) {
+            return badRequest(e.getMessage());
+        }
+    }
+
+    protected <T, K> ResponseEntity<?> proceed(RequestProcessorById<T, K> code, K id) {
+        return proceed(() -> code.run(id));
+    }
+
+    protected <T> ResponseEntity<?> proceed(RequestProcessorByEntity<T> code, T entity) {
+        return proceed(() -> code.run(entity));
+    }
 }
+
