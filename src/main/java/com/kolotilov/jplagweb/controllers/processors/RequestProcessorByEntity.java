@@ -1,4 +1,4 @@
-package com.kolotilov.jplagweb.controllers;
+package com.kolotilov.jplagweb.controllers.processors;
 
 import com.kolotilov.jplagweb.exceptions.DuplicateEntityException;
 import com.kolotilov.jplagweb.exceptions.EntityNotFoundException;

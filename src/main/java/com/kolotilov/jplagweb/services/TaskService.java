@@ -25,6 +25,8 @@ public class TaskService implements EntityService<Task, Integer> {
 
     private static String SELECT_BY_USERNAME_AND_NAME = "SELECT * FROM Task WHERE UserUsername = ? AND Name = ?";
 
+    private static String SELECT_BY_USERNAME = "SELECT * FROM Task WHERE UserUsername = ?";
+
     private static String INSERT = "INSERT INTO Task (Name, Description, UserUsername) VALUE (?, ?, ?)";
 
     private static String UPDATE = "UPDATE Task SET Name = ?, Description = ? WHERE Id = ?";
@@ -49,14 +51,25 @@ public class TaskService implements EntityService<Task, Integer> {
                     new Object[]{id},
                     new TaskMapper()).get(0);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new EntityNotFoundException("Task not found!");
         }
+    }
+
+    public List<Task> getByUsername(String username) {
+        return jdbc.query(SELECT_BY_USERNAME,
+                new TaskMapper());
     }
 
     @Override
     public Task create(Task task) throws DuplicateEntityException {
         try {
-            if (jdbc.query(SELECT_BY_USERNAME_AND_NAME, new TaskMapper()).size() > 0)
+            if (jdbc.query(SELECT_BY_USERNAME_AND_NAME,
+                    new Object[] {
+                            task.getUserUsername(),
+                            task.getName()
+                        },
+                    new TaskMapper()).size() > 0)
                 throw new DuplicateEntityException("Task already exists!");
             jdbc.update(INSERT,
                     task.getName(),
@@ -102,11 +115,13 @@ public class TaskService implements EntityService<Task, Integer> {
 
         @Override
         public Task mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new Task(
+            Task result = new Task(
                     rs.getString("Name"),
                     rs.getNString("Description"),
                     rs.getString("UserUsername")
             );
+            result.setId(rs.getInt("Id"));
+            return result;
         }
     }
 }
