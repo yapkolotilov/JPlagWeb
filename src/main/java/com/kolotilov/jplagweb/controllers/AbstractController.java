@@ -1,5 +1,8 @@
 package com.kolotilov.jplagweb.controllers;
 
+import com.kolotilov.jplagweb.controllers.processors.RequestProcessor;
+import com.kolotilov.jplagweb.controllers.processors.RequestProcessorByEntity;
+import com.kolotilov.jplagweb.controllers.processors.RequestProcessorById;
 import com.kolotilov.jplagweb.exceptions.DuplicateEntityException;
 import com.kolotilov.jplagweb.exceptions.EntityNotFoundException;
 import com.kolotilov.jplagweb.models.ErrorViewModel;
@@ -28,8 +31,10 @@ public abstract class AbstractController {
         try {
             return ok(code.run());
         } catch (EntityNotFoundException e) {
+            e.printStackTrace();
             return notFound(e.getMessage());
         } catch (DuplicateEntityException e) {
+            e.printStackTrace();
             return badRequest(e.getMessage());
         }
     }

@@ -3,7 +3,8 @@ package com.kolotilov.jplagweb.configuration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.PostMapping;
+
+import javax.annotation.PostConstruct;
 
 /**
  * Initializes database. Creates new tables if absent.
@@ -23,7 +24,7 @@ public class DatabaseInitializer {
             "    Username VARCHAR(256) PRIMARY KEY,\n" +
             "    Password VARCHAR(256) NOT NULL,\n" +
             "    Name NVARCHAR(512) DEFAULT ''\n" +
-            ")";
+            ");\n";
 
     private static String CREATE_TASK = "CREATE TABLE IF NOT EXISTS Task (\n" +
             "    Id INTEGER PRIMARY KEY AUTO_INCREMENT,\n" +
@@ -38,7 +39,7 @@ public class DatabaseInitializer {
             "    Name VARCHAR(256) NOT NULL,\n" +
             "    Content NVARCHAR(1024) NOT NULL,\n" +
             "\n" +
-            "    TaskId INTEGER REFERENCES Task(Id)\n" +
+            "    TaskId INTEGER NOT NULL REFERENCES Task(Id)\n" +
             ")";
 
     private static String CREATE_MATCHPART = "CREATE TABLE IF NOT EXISTS MatchPart (\n" +
@@ -46,8 +47,8 @@ public class DatabaseInitializer {
             "    Name VARCHAR(256) NOT NULL,\n" +
             "    Content NVARCHAR(1024) NOT NULL,\n" +
             "\n" +
-            "    TaskId INTEGER REFERENCES Task(Id),\n" +
-            "    MatchId INTEGER REFERENCES `Match`(Id)\n" +
+            "    TaskId INTEGER NOT NULL REFERENCES Task(Id),\n" +
+            "    MatchId INTEGER NOT NULL REFERENCES `Match`(Id)\n" +
             ")";
 
     private static String CREATE_ACCESS = "CREATE TABLE IF NOT EXISTS Access (\n" +
@@ -61,15 +62,15 @@ public class DatabaseInitializer {
             "    Id INTEGER PRIMARY KEY AUTO_INCREMENT,\n" +
             "    Text NVARCHAR(1024) NOT NULL,\n" +
             "\n" +
-            "    UserUsername VARCHAR(256) REFERENCES User(Username),\n" +
-            "    MatchId INTEGER REFERENCES `Match`(Id)\n" +
+            "    UserUsername VARCHAR(256) REFERENCES User(Username) ON DELETE SET NULL,\n" +
+            "    MatchId INTEGER NOT NULL REFERENCES `Match`(Id)\n" +
             ")";
     //endregion
 
     @Autowired
     private JdbcTemplate jdbc;
 
-    @PostMapping
+    @PostConstruct
     public void initialize() {
         jdbc.execute(CREATE_USER);
         jdbc.execute(CREATE_TASK);
