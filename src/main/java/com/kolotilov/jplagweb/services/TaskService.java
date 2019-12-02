@@ -51,7 +51,6 @@ public class TaskService implements EntityService<Task, Integer> {
                     new Object[]{id},
                     new TaskMapper()).get(0);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new EntityNotFoundException("Task not found!");
         }
     }
@@ -76,6 +75,7 @@ public class TaskService implements EntityService<Task, Integer> {
                     task.getDescription(),
                     task.getUserUsername()
             );
+            task.setId(getLastId());
             return task;
         } catch (Exception e) {
             throw new DuplicateEntityException("Task already exists!");
@@ -109,6 +109,10 @@ public class TaskService implements EntityService<Task, Integer> {
         } catch (Exception e) {
             throw new EntityNotFoundException("User not found!");
         }
+    }
+
+    private int getLastId() {
+        return jdbc.queryForObject(SELECT_LAST_INSERT_ID, Integer.class);
     }
 
     private static class TaskMapper implements RowMapper<Task> {
