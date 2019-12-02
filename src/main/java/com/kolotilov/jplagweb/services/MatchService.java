@@ -14,15 +14,19 @@ import java.util.List;
 public class MatchService implements EntityService<Match, Integer> {
 
     //region Queries
-    private static final String SELECT_ALL = "";
+    private static final String SELECT_ALL = "SELECT * FROM `match`";
 
-    private static final String SELECT_BY_ID = "";
+    private static final String SELECT_BY_ID = "SELECT * FROM `match` WHERE Id = ?";
 
-    private static final String INSERT = "";
+    private static final String SELECT_BY_TASKID = "SELECT * FROM `match` WHERE TaskId = ?";
 
-    private static final String UPDATE = "";
+    private static final String SELECT_BY_TASKID_AND_NAME = "SELECT * FROM `match` WHERE TaskId = ? AND Name = ?";
 
-    private static final String DELETE = "";
+    private static final String INSERT = "INSERT INTO `match` (Name, Content, TaskId) VALUE (?, ?, ?)";
+
+    private static final String UPDATE = "UPDATE `match` SET Name = ?, Content = ?, TaskId = ? WHERE Id = ?";
+
+    private static final String DELETE = "DELETE FROM `match` WHERE Id = ?";
     //endregion
 
     @Autowired
@@ -35,7 +39,8 @@ public class MatchService implements EntityService<Match, Integer> {
      */
     @Override
     public List<Match> getAll() {
-        return null;
+        return jdbc.query(SELECT_ALL,
+                new MatchMapper());
     }
 
     /**
@@ -46,30 +51,71 @@ public class MatchService implements EntityService<Match, Integer> {
      */
     @Override
     public Match getById(Integer id) throws EntityNotFoundException {
-        return null;
+        try {
+            return jdbc.query(SELECT_BY_ID,
+                    new Object[]{id},
+                    new MatchMapper()).get(0);
+        } catch (Exception e) {
+            throw new EntityNotFoundException("Match not found!");
+        }
+    }
+
+    public List<Match> getByTaskId(int taskId) throws EntityNotFoundException {
+        return jdbc.query(SELECT_BY_TASKID,
+                new Object[]{taskId},
+                new MatchMapper());
     }
 
     /**
      * Creates new object and returns it.
      *
-     * @param entity Entity to create.
+     * @param match Entity to create.
      * @return Created entity with actual id.
      */
     @Override
-    public Match create(Match entity) throws DuplicateEntityException {
-        return null;
+    public Match create(Match match) throws DuplicateEntityException {
+        try {
+            if (jdbc.query(SELECT_BY_TASKID_AND_NAME,
+                    new Object[]{
+                            match.getTaskId(),
+                            match.getName()
+                    },
+                    new MatchMapper()).size() > 0)
+                throw new Exception();
+
+            jdbc.update(INSERT,
+                    match.getName(),
+                    match.getContent(),
+                    match.getTaskId()
+            );
+
+            match.setId(getLastId());
+            return match;
+        } catch (Exception e) {
+            throw new DuplicateEntityException("Match already exists!");
+        }
     }
 
     /**
      * Edits entity by id given.
      *
-     * @param entity Entity values. Note that id must be specified too.
+     * @param match Entity values. Note that id must be specified too.
      * @return New entity status.
      * @throws EntityNotFoundException if Entity was not found.
      */
     @Override
-    public Match edit(Match entity) throws EntityNotFoundException {
-        return null;
+    public Match edit(Match match) throws EntityNotFoundException {
+        try {
+            if (jdbc.update(UPDATE,
+                    match.getName(),
+                    match.getContent(),
+                    match.getTaskId(),
+                    match.getId()) == 0)
+                throw new Exception();
+            return match;
+        } catch (Exception e) {
+            throw new EntityNotFoundException("Match not found!");
+        }
     }
 
     /**
@@ -81,7 +127,19 @@ public class MatchService implements EntityService<Match, Integer> {
      */
     @Override
     public Match delete(Integer id) throws EntityNotFoundException {
-        return null;
+        try {
+            Match match = getById(id);
+            jdbc.update(DELETE,
+                    id
+            );
+            return match;
+        } catch (Exception e) {
+            throw new EntityNotFoundException("Match not found!");
+        }
+    }
+
+    private int getLastId() {
+        return jdbc.queryForObject(SELECT_LAST_INSERT_ID, Integer.class);
     }
 
     private static class MatchMapper implements RowMapper<Match> {
