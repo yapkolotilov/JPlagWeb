@@ -3,8 +3,6 @@ package com.kolotilov.jplagweb.services;
 import com.kolotilov.jplagweb.exceptions.DuplicateEntityException;
 import com.kolotilov.jplagweb.exceptions.EntityNotFoundException;
 import com.kolotilov.jplagweb.models.User;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +14,7 @@ import java.util.List;
  * User service.
  */
 @Service
-public class UserService implements EntityService<User, String> {
+public class UserService extends AbstractService<User, String> implements EntityService<User, String> {
 
     //region Queries
     private static String SELECT_ALL = "SELECT * FROM User";
@@ -30,9 +28,6 @@ public class UserService implements EntityService<User, String> {
     private static String DELETE = "DELETE FROM User WHERE Username = ?";
     //endregion
 
-    @Autowired
-    private JdbcTemplate jdbc;
-
     /**
      * Returns all entities in the table.
      *
@@ -40,24 +35,18 @@ public class UserService implements EntityService<User, String> {
      */
     @Override
     public List<User> getAll() {
-        return jdbc.query(SELECT_ALL, new UserMapper());
+        return getAllBase();
     }
 
     /**
      * Returns object by specified id.
      *
-     * @param id Entity id.
+     * @param username Entity id.
      * @return object by specified id.
      */
     @Override
-    public User getById(String id) throws EntityNotFoundException {
-        try {
-            return jdbc.query(SELECT_BY_ID,
-                    new Object[]{id},
-                    new UserMapper()).get(0);
-        } catch (Exception e) {
-            throw new EntityNotFoundException("User not found!");
-        }
+    public User getById(String username) throws EntityNotFoundException {
+        return getByIdBase(username);
     }
 
     /**
@@ -68,15 +57,10 @@ public class UserService implements EntityService<User, String> {
      */
     @Override
     public User create(User user) throws DuplicateEntityException {
-        try {
-            jdbc.update(INSERT,
-                    user.getUsername(),
-                    user.getPassword(),
-                    user.getName());
-            return user;
-        } catch (Exception e) {
-            throw new DuplicateEntityException("User already exists!");
-        }
+        return createBase(user,
+                user.getUsername(),
+                user.getPassword(),
+                user.getName());
     }
 
     /**
@@ -88,18 +72,10 @@ public class UserService implements EntityService<User, String> {
      */
     @Override
     public User edit(User user) throws EntityNotFoundException {
-        try {
-            int rows = jdbc.update(UPDATE,
-                    user.getPassword(),
-                    user.getName(),
-                    user.getUsername()
-            );
-            if (rows == 0)
-                throw new EntityNotFoundException("User not found!");
-            return user;
-        } catch (Exception e) {
-            throw new EntityNotFoundException("User not found!");
-        }
+        return editBase(user,
+                user.getPassword(),
+                user.getName(),
+                user.getUsername());
     }
 
     /**
@@ -111,15 +87,42 @@ public class UserService implements EntityService<User, String> {
      */
     @Override
     public User delete(String id) throws EntityNotFoundException {
-        try {
-            User user = getById(id);
-            jdbc.update(DELETE,
-                    id
-            );
-            return user;
-        } catch (Exception e) {
-            throw new EntityNotFoundException("User not found!");
-        }
+        return deleteBase(id);
+    }
+
+    @Override
+    protected String selectAllQuery() {
+        return SELECT_ALL;
+    }
+
+    @Override
+    protected String selectByIdQuery() {
+        return SELECT_BY_ID;
+    }
+
+    @Override
+    protected String insertQuery() {
+        return INSERT;
+    }
+
+    @Override
+    protected String updateQuery() {
+        return UPDATE;
+    }
+
+    @Override
+    protected String deleteQuery() {
+        return DELETE;
+    }
+
+    @Override
+    protected String entityName() {
+        return "User";
+    }
+
+    @Override
+    protected RowMapper<User> getMapper() {
+        return new UserMapper();
     }
 
     private static class UserMapper implements RowMapper<User> {
