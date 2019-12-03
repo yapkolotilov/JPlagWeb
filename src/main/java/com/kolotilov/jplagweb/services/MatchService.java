@@ -3,15 +3,13 @@ package com.kolotilov.jplagweb.services;
 import com.kolotilov.jplagweb.exceptions.DuplicateEntityException;
 import com.kolotilov.jplagweb.exceptions.EntityNotFoundException;
 import com.kolotilov.jplagweb.models.Match;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-public class MatchService implements EntityService<Match, Integer> {
+public class MatchService extends AbstractService<Match, Integer> implements EntityService<Match, Integer> {
 
     //region Queries
     private static final String SELECT_ALL = "SELECT * FROM `match`";
@@ -29,9 +27,6 @@ public class MatchService implements EntityService<Match, Integer> {
     private static final String DELETE = "DELETE FROM `match` WHERE Id = ?";
     //endregion
 
-    @Autowired
-    private JdbcTemplate jdbc;
-
     /**
      * Returns all entities in the table.
      *
@@ -39,8 +34,7 @@ public class MatchService implements EntityService<Match, Integer> {
      */
     @Override
     public List<Match> getAll() {
-        return jdbc.query(SELECT_ALL,
-                new MatchMapper());
+        return getAllBase();
     }
 
     /**
@@ -51,16 +45,20 @@ public class MatchService implements EntityService<Match, Integer> {
      */
     @Override
     public Match getById(Integer id) throws EntityNotFoundException {
+        return getByIdBase(id);
+    }
+
+    public Match getByTaskIdAndName(int taskId, String name) throws EntityNotFoundException {
         try {
-            return jdbc.query(SELECT_BY_ID,
-                    new Object[]{id},
+            return jdbc.query(SELECT_BY_TASKID_AND_NAME,
+                    new Object[]{taskId, name},
                     new MatchMapper()).get(0);
         } catch (Exception e) {
             throw new EntityNotFoundException("Match not found!");
         }
     }
 
-    public List<Match> getByTaskId(int taskId) throws EntityNotFoundException {
+    public List<Match> getByTaskId(int taskId) {
         return jdbc.query(SELECT_BY_TASKID,
                 new Object[]{taskId},
                 new MatchMapper());
@@ -74,26 +72,13 @@ public class MatchService implements EntityService<Match, Integer> {
      */
     @Override
     public Match create(Match match) throws DuplicateEntityException {
-        try {
-            if (jdbc.query(SELECT_BY_TASKID_AND_NAME,
-                    new Object[]{
-                            match.getTaskId(),
-                            match.getName()
-                    },
-                    new MatchMapper()).size() > 0)
-                throw new Exception();
-
-            jdbc.update(INSERT,
-                    match.getName(),
-                    match.getContent(),
-                    match.getTaskId()
-            );
-
-            match.setId(getLastId());
-            return match;
-        } catch (Exception e) {
-            throw new DuplicateEntityException("Match already exists!");
-        }
+        checkDuplicates(
+                match.getTaskId(),
+                match.getName());
+        return createBase(match,
+                match.getName(),
+                match.getContent(),
+                match.getTaskId());
     }
 
     /**
@@ -105,17 +90,11 @@ public class MatchService implements EntityService<Match, Integer> {
      */
     @Override
     public Match edit(Match match) throws EntityNotFoundException {
-        try {
-            if (jdbc.update(UPDATE,
-                    match.getName(),
-                    match.getContent(),
-                    match.getTaskId(),
-                    match.getId()) == 0)
-                throw new Exception();
-            return match;
-        } catch (Exception e) {
-            throw new EntityNotFoundException("Match not found!");
-        }
+        return editBase(match,
+                match.getName(),
+                match.getContent(),
+                match.getTaskId(),
+                match.getId());
     }
 
     /**
@@ -127,19 +106,47 @@ public class MatchService implements EntityService<Match, Integer> {
      */
     @Override
     public Match delete(Integer id) throws EntityNotFoundException {
-        try {
-            Match match = getById(id);
-            jdbc.update(DELETE,
-                    id
-            );
-            return match;
-        } catch (Exception e) {
-            throw new EntityNotFoundException("Match not found!");
-        }
+        return deleteBase(id);
     }
 
-    private int getLastId() {
-        return jdbc.queryForObject(SELECT_LAST_INSERT_ID, Integer.class);
+    @Override
+    protected String selectAllQuery() {
+        return SELECT_ALL;
+    }
+
+    @Override
+    protected String selectByIdQuery() {
+        return null;
+    }
+
+    @Override
+    protected String insertQuery() {
+        return null;
+    }
+
+    @Override
+    protected String updateQuery() {
+        return null;
+    }
+
+    @Override
+    protected String deleteQuery() {
+        return null;
+    }
+
+    @Override
+    protected String entityName() {
+        return null;
+    }
+
+    @Override
+    protected RowMapper<Match> getMapper() {
+        return null;
+    }
+
+    @Override
+    protected String selectDuplicatesQuery() {
+        return SELECT_BY_TASKID_AND_NAME;
     }
 
     private static class MatchMapper implements RowMapper<Match> {
