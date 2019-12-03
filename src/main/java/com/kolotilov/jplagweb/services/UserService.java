@@ -3,8 +3,6 @@ package com.kolotilov.jplagweb.services;
 import com.kolotilov.jplagweb.exceptions.DuplicateEntityException;
 import com.kolotilov.jplagweb.exceptions.EntityNotFoundException;
 import com.kolotilov.jplagweb.models.User;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
@@ -29,9 +27,6 @@ public class UserService extends AbstractService<User, String> implements Entity
 
     private static String DELETE = "DELETE FROM User WHERE Username = ?";
     //endregion
-
-    @Autowired
-    private JdbcTemplate jdbc;
 
     /**
      * Returns all entities in the table.

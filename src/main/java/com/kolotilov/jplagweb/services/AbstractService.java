@@ -32,24 +32,24 @@ public abstract class AbstractService<T, K> {
     protected abstract RowMapper<T> getMapper();
 
 
-    protected int getLastId() {
+    protected final int getLastId() {
         return jdbc.queryForObject("SELECT LAST_INSERT_ID()", Integer.class);
     }
 
-    protected void checkDuplicates(Object... args) throws Exception {
+    protected final void checkDuplicates(Object... args) throws DuplicateEntityException {
         if (jdbc.query(selectDuplicatesQuery(),
                 args,
                 getMapper()).size() > 0)
-            throw new Exception("Duplicates found");
+            throw new DuplicateEntityException("Entity with given set of attributes already exists!");
     }
 
 
-    protected List<T> getAllBase() {
+    protected final List<T> getAllBase() {
         return jdbc.query(selectAllQuery(),
                 getMapper());
     }
 
-    protected T getByIdBase(K id) throws EntityNotFoundException {
+    protected final T getByIdBase(K id) throws EntityNotFoundException {
         try {
             return jdbc.query(selectByIdQuery(),
                     new Object[]{ id },
@@ -60,7 +60,7 @@ public abstract class AbstractService<T, K> {
         }
     }
 
-    protected T createBase(T entity, Object... params) throws DuplicateEntityException {
+    protected final T createBase(T entity, Object... params) throws DuplicateEntityException {
         try {
             jdbc.update(insertQuery(),
                     params);
@@ -72,7 +72,7 @@ public abstract class AbstractService<T, K> {
         }
     }
 
-    protected T editBase(T entity, Object... args) throws EntityNotFoundException {
+    protected final T editBase(T entity, Object... args) throws EntityNotFoundException {
         try {
             if (jdbc.update(updateQuery(),
                     args) == 0)
@@ -83,7 +83,7 @@ public abstract class AbstractService<T, K> {
         }
     }
 
-    protected T deleteBase(K id) throws EntityNotFoundException {
+    protected final T deleteBase(K id) throws EntityNotFoundException {
         T entity = getByIdBase(id);
         jdbc.update(deleteQuery(),
                 id);
