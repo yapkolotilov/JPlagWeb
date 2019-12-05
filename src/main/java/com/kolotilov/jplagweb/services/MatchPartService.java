@@ -2,7 +2,6 @@ package com.kolotilov.jplagweb.services;
 
 import com.kolotilov.jplagweb.exceptions.DuplicateEntityException;
 import com.kolotilov.jplagweb.exceptions.EntityNotFoundException;
-import com.kolotilov.jplagweb.models.Match;
 import com.kolotilov.jplagweb.models.MatchPart;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
@@ -38,7 +37,7 @@ public class MatchPartService extends AbstractService<MatchPart, Integer> implem
 
     @Override
     public MatchPart getById(Integer id) throws EntityNotFoundException {
-        return getById(id);
+        return getByIdBase(id);
     }
 
     @Override
