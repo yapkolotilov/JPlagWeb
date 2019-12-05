@@ -29,6 +29,7 @@ public class MatchService extends AbstractService<Match, Integer> implements Ent
     private static final String DELETE = "DELETE FROM `match` WHERE Id = ?";
     //endregion
 
+
     /**
      * Returns all entities in the table.
      *
@@ -110,6 +111,7 @@ public class MatchService extends AbstractService<Match, Integer> implements Ent
     public Match delete(Integer id) throws EntityNotFoundException {
         return deleteBase(id);
     }
+
 
     @Override
     protected String selectAllQuery() {
