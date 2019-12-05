@@ -1,11 +1,14 @@
 package com.kolotilov.jplagweb.controllers;
 
+import com.kolotilov.jplagweb.exceptions.EntityNotFoundException;
 import com.kolotilov.jplagweb.models.Match;
+import com.kolotilov.jplagweb.services.MatchPartService;
 import com.kolotilov.jplagweb.services.MatchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.InputStream;
 import java.util.List;
 
 @RestController
@@ -14,6 +17,8 @@ public class MatchController extends AbstractController {
 
     @Autowired
     private MatchService service;
+    @Autowired
+    private MatchPartService matchPartService;
 
     @GetMapping
     public List<Match> getAll() {
@@ -32,7 +37,13 @@ public class MatchController extends AbstractController {
 
     @GetMapping("/{taskId}/{name}")
     public ResponseEntity<?> getByTaskIdAndName(@PathVariable int taskId, @PathVariable String name) {
-        return proceed(service::getByTaskIdAndName, taskId, name);
+        return proceed(() -> {
+            try {
+                return service.getByTaskIdAndName(taskId, name);
+            } catch (EntityNotFoundException e) {
+                return matchPartService.getByTaskIdAndName(taskId, name);
+            }
+        });
     }
 
     @PostMapping
@@ -48,5 +59,26 @@ public class MatchController extends AbstractController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable int id) {
         return proceed(service::delete, id);
+    }
+
+
+    @GetMapping("/{taskId}/back.gif")
+    public InputStream getBackGif() {
+        return getClass().getResourceAsStream("/static/back.gif");
+    }
+
+    @GetMapping("/{taskId}/forward.gif")
+    public InputStream getForwardGif() {
+        return getClass().getResourceAsStream("/static/forward.gif");
+    }
+
+    @GetMapping("/{taskId}/fields.js")
+    public InputStream getFields() {
+        return getClass().getResourceAsStream("/static/fields.js");
+    }
+
+    @GetMapping("/{taskId}/logo.gif")
+    public InputStream getLogo() {
+        return getClass().getResourceAsStream("/static/logo.gif");
     }
 }
