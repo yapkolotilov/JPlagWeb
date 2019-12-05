@@ -4,11 +4,13 @@ import com.kolotilov.jplagweb.exceptions.DuplicateEntityException;
 import com.kolotilov.jplagweb.exceptions.EntityNotFoundException;
 import com.kolotilov.jplagweb.models.Match;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Service;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+@Service
 public class MatchService extends AbstractService<Match, Integer> implements EntityService<Match, Integer> {
 
     //region Queries
