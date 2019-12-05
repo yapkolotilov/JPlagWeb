@@ -1,6 +1,7 @@
 package com.kolotilov.jplagweb.controllers;
 
 import com.kolotilov.jplagweb.controllers.processors.RequestProcessor;
+import com.kolotilov.jplagweb.controllers.processors.RequestProcessorByDoubleParams;
 import com.kolotilov.jplagweb.controllers.processors.RequestProcessorByEntity;
 import com.kolotilov.jplagweb.controllers.processors.RequestProcessorById;
 import com.kolotilov.jplagweb.exceptions.DuplicateEntityException;
@@ -45,6 +46,10 @@ public abstract class AbstractController {
 
     protected <T> ResponseEntity<?> proceed(RequestProcessorByEntity<T> code, T entity) {
         return proceed(() -> code.run(entity));
+    }
+
+    protected <T, A, B> ResponseEntity<?> proceed(RequestProcessorByDoubleParams<T, A, B> code, A firstArg, B secondArg) {
+        return proceed(() -> code.run(firstArg, secondArg));
     }
 }
 

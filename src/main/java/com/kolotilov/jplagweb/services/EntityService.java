@@ -12,6 +12,8 @@ import java.util.List;
  */
 public interface EntityService<T, K> {
 
+    String SELECT_LAST_INSERT_ID = "SELECT LAST_INSERT_ID()";
+
     /**
      * Returns all entities in the table.
      * @return all entities in the table.
